@@ -1,12 +1,12 @@
 pub struct GravityObject {
-    pub x: i32,
-    pub y: i32,
+    pub x: f32,
+    pub y: f32,
     pub v_x: f32,
     pub v_y: f32
 }
 
 impl GravityObject {
-    pub fn new(x: i32, y: i32, v_x: f32, v_y: f32) -> Self {
+    pub fn new(x: f32, y: f32, v_x: f32, v_y: f32) -> Self {
         GravityObject{x, y, v_x, v_y}
     }
 }
@@ -24,7 +24,6 @@ impl TorsionSpring {
 /* enum to hold different types of physics objects */
 pub enum PhysicsObject {
     GravityObject(GravityObject),
-    Spring(TorsionSpring),
 }
 
 /* update physics objects */
@@ -33,13 +32,9 @@ pub fn update(objects: &mut Vec<PhysicsObject>, delta_time: f32) {
         match object {
             /* apply update to gravity object */
             PhysicsObject::GravityObject(object) => {
-                object.v_y += 100.0 * delta_time;
-                object.y += (object.v_y * delta_time) as i32;
-                object.x += (object.v_x * delta_time) as i32;
-                println!("Pos: ({}, {})", object.x, object.y);
-            }
-            /* apply update to spring */
-            PhysicsObject::Spring(spring) => {
+                object.v_y += 500.0 * delta_time;
+                object.y += object.v_y * delta_time;
+                object.x += object.v_x * delta_time;
             }
         }
     }
