@@ -4,11 +4,9 @@ extern crate sdl3;
 use sdl3::pixels::Color;
 use sdl3::event::Event;
 use sdl3::keyboard::Keycode;
-use sdl3::render::FRect;
 use sdl3::Error;
 use std::time::Duration;
 
-mod physics;
 mod objects;
 
 fn main() -> Result<(), Error> {
@@ -28,9 +26,11 @@ fn main() -> Result<(), Error> {
     canvas.clear();
     canvas.present();
 
-    /* create vector of physics objects */
-    let mut objects: Vec<&mut dyn physics::Physics> = Vec::new();
-    let mut square_object = objects::Square::new(objects::Transform::new(0.0, 0.0, 0.0, 0.0, 1.0), 1.0);
+    /* create vectors of objects */
+    let mut objects: Vec<&mut dyn objects::Object> = Vec::new();
+    /* create square */
+    let mut square_object = objects::Square::new(objects::Transform::new(0.0, 0.0, 0.0, 0.0, 1.0), 10.0);
+    /* push to vector */
     objects.push(&mut square_object);
 
     /* run loop, check events */
@@ -47,7 +47,7 @@ fn main() -> Result<(), Error> {
                 _ => {}
             }
         }
-        main_loop(&mut objects);
+        main_loop(&mut canvas, &mut objects);
         /* present canvas */
         canvas.present();
         /* idle */
@@ -56,12 +56,17 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn main_loop(objects: &mut Vec<&mut dyn physics::Physics>) {
+/* objects must be mut in order to use iter_mut */
+fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
+        objects: &mut Vec<&mut dyn objects::Object>)
+        -> Result<(), Error> {
+    /* get delta time */
     let delta = 1.0 / 60.0;
-    /* update physics */
+    /* iterate over objects */
     for object in objects.iter_mut() {
-        object.update(delta);
+        object.physics_update(delta);
+        object.draw(canvas)?;
     }
-    /* draw all objects */
+    Ok(())
 }
 
