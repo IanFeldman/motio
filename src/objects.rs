@@ -1,6 +1,17 @@
 use sdl3::Error;
-use sdl3::pixels::Color;
-use sdl3::render::FRect;
+use sdl3::render::{FRect, Texture};
+
+pub struct Sprite {
+    pub width: f32,
+    pub height: f32,
+    pub texture: Texture
+}
+
+impl Sprite {
+    pub fn new(width: f32, height: f32, texture: Texture) -> Self {
+        Sprite { width, height, texture }
+    }
+}
 
 /* Position, angle, and physics properties */
 pub struct Transform {
@@ -32,12 +43,12 @@ pub trait Object {
 /* Individual object types */
 pub struct Square {
     pub transform: Transform,
-    side_length: f32
+    pub sprite: Sprite,
 }
 
 impl Square {
-    pub fn new(transform: Transform, side_length: f32) -> Self {
-        Square { transform, side_length }
+    pub fn new(transform: Transform, sprite: Sprite) -> Self {
+        Square { transform, sprite }
     }
 }
 
@@ -51,10 +62,7 @@ impl Object for Square {
     }
     fn draw(&self, canvas: &mut sdl3::render::Canvas<sdl3::video::Window>)
         -> Result<(), Error> {
-        /* square specific draw */
-        canvas.set_draw_color(Color::RGB(255, 0, 0));
-        canvas.draw_rect(FRect::new(self.transform.x, self.transform.y, self.side_length, self.side_length))?;
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
+        canvas.copy(&self.sprite.texture, None, FRect::new(self.transform.x, self.transform.y, self.sprite.width, self.sprite.height))?;
         Ok(())
     }
 }

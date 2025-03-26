@@ -3,8 +3,10 @@ extern crate sdl3;
 /* sdl3 */
 use sdl3::pixels::Color;
 use sdl3::event::Event;
+use sdl3::image::LoadTexture;
 use sdl3::keyboard::Keycode;
 use sdl3::Error;
+use std::path::Path;
 use std::time::Duration;
 
 mod objects;
@@ -26,10 +28,17 @@ fn main() -> Result<(), Error> {
     canvas.clear();
     canvas.present();
 
+    /* load square texture */
+    let texture_creator = canvas.texture_creator();
+    let path = Path::new("assets/square.png");
+    let texture = texture_creator.load_texture(path)?;
+
     /* create vectors of objects */
     let mut objects: Vec<&mut dyn objects::Object> = Vec::new();
     /* create square */
-    let mut square_object = objects::Square::new(objects::Transform::new(0.0, 0.0, 0.0, 0.0, 1.0), 10.0);
+    let mut square_object = objects::Square::new(
+        objects::Transform::new(0.0, 0.0, 0.0, 0.0, 1.0),
+        objects::Sprite::new(64.0, 64.0, texture));
     /* push to vector */
     objects.push(&mut square_object);
 
@@ -47,7 +56,7 @@ fn main() -> Result<(), Error> {
                 _ => {}
             }
         }
-        main_loop(&mut canvas, &mut objects);
+        main_loop(&mut canvas, &mut objects)?;
         /* present canvas */
         canvas.present();
         /* idle */
