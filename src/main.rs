@@ -9,6 +9,7 @@ use sdl3::Error;
 use std::time::Duration;
 
 mod physics;
+mod objects;
 
 fn main() -> Result<(), Error> {
     /* create sdl context */
@@ -28,9 +29,9 @@ fn main() -> Result<(), Error> {
     canvas.present();
 
     /* create vector of physics objects */
-    let mut objects: Vec<physics::PhysicsObject> = Vec::new();
-    let gravity_obj = physics::GravityObject::new(0.0, 0.0, 0.0, 0.0);
-    objects.push(physics::PhysicsObject::GravityObject(gravity_obj));
+    let mut objects: Vec<&mut dyn physics::Physics> = Vec::new();
+    let mut square_object = objects::Square::new(objects::Transform::new(0.0, 0.0, 0.0, 0.0, 1.0), 1.0);
+    objects.push(&mut square_object);
 
     /* run loop, check events */
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -46,11 +47,7 @@ fn main() -> Result<(), Error> {
                 _ => {}
             }
         }
-        /* update physics objects */
-        let delta = 1.0 / 60.0;
-        physics::update(&mut objects, delta);
-        /* draw objects */
-        draw(&mut canvas, &objects)?;
+        main_loop(&mut objects);
         /* present canvas */
         canvas.present();
         /* idle */
@@ -59,21 +56,12 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-
-fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
-        objects: &Vec<physics::PhysicsObject>)
-        -> Result<(), Error> {
-    canvas.set_draw_color(Color::RGB(255, 0, 0));
-    for object in objects.iter() {
-        match object {
-            /* apply update to gravity object */
-            physics::PhysicsObject::GravityObject(object) => {
-                canvas.draw_rect(FRect::new(object.x, object.y, 50.0, 50.0))?;
-            }
-        }
+fn main_loop(objects: &mut Vec<&mut dyn physics::Physics>) {
+    let delta = 1.0 / 60.0;
+    /* update physics */
+    for object in objects.iter_mut() {
+        object.update(delta);
     }
-    Ok(())
+    /* draw all objects */
 }
-
-
 
