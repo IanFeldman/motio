@@ -172,7 +172,7 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
 {
     /* apply scale to sprite dimensions */
     let sprite_width = object.sprite.width * camera.scale;
-    let sprite_height = object.sprite.width * camera.scale;
+    let sprite_height = object.sprite.height * camera.scale;
 
     /* ensure sprite is drawn from center, not corner */
     let mut pos_x = object.transform.x - sprite_width / 2.0;
