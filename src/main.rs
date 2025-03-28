@@ -4,7 +4,7 @@ extern crate sdl3;
 use sdl3::pixels::Color;
 use sdl3::event::Event;
 use sdl3::image::LoadTexture;
-use sdl3::keyboard::Keycode;
+use sdl3::keyboard::{Keycode, Scancode};
 use sdl3::Error;
 use sdl3::render::FRect;
 use std::path::Path;
@@ -18,21 +18,22 @@ pub struct Camera
     y: f32,
     width: u32,
     height: u32,
-    scale: f32
+    scale: f32,
+    speed: f32
 }
 
 impl Camera
 {
-    fn new(x: f32, y: f32, width: u32, height: u32, scale: f32) -> Self
+    fn new(x: f32, y: f32, width: u32, height: u32, scale: f32, speed: f32) -> Self
     {
-        Camera { x, y, width, height, scale }
+        Camera { x, y, width, height, scale, speed }
     }
 }
 
 fn main() -> Result<(), Error>
 {
     /* create camera */
-    let camera = Camera::new(0.0, 0.0, 800, 600, 1.0);
+    let mut camera = Camera::new(0.0, 0.0, 800, 600, 1.0, 200.0);
 
     /* create sdl context */
     let sdl_context = sdl3::init().unwrap();
@@ -71,6 +72,8 @@ fn main() -> Result<(), Error>
     {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
+
+        /* listen for quit event */
         for event in event_pump.poll_iter()
         {
             match event
@@ -83,26 +86,48 @@ fn main() -> Result<(), Error>
                 _ => {}
             }
         }
+        /* listen for keyboard presses */
+        poll_key(&event_pump, &mut camera, 1.0 / 60.0);
+        /* run main loop */
         main_loop(&mut canvas, &mut objects, &camera)?;
-        /* present canvas */
         canvas.present();
-        /* idle */
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
     Ok(())
 }
 
+/* poll keyboard for camera movement input */
+fn poll_key(event_pump: &sdl3::EventPump, camera: &mut Camera, delta_time: f32)
+{
+    let keystates = event_pump.keyboard_state();
+    if keystates.is_scancode_pressed(Scancode::W)
+    {
+        camera.y -= camera.speed * delta_time;
+    }
+    if keystates.is_scancode_pressed(Scancode::A)
+    {
+        camera.x -= camera.speed * delta_time;
+    }
+    if keystates.is_scancode_pressed(Scancode::S)
+    {
+        camera.y += camera.speed * delta_time;
+    }
+    if keystates.is_scancode_pressed(Scancode::D)
+    {
+        camera.x += camera.speed * delta_time;
+    }
+}
+
+/* update and draw all objects */
 /* objects must be mut in order to use iter_mut */
 fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     objects: &mut Vec<&mut objects::Object>,
     camera: &Camera) -> Result<(), Error>
 {
-    /* get delta time */
-    let delta = 1.0 / 60.0;
     /* iterate over objects */
     for object in objects.iter_mut()
     {
-        objects::update(object, delta);
+        objects::update(object, 1.0 / 60.0);
         draw(canvas, object, camera)?;
     }
     Ok(())
