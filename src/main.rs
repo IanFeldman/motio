@@ -12,14 +12,34 @@ use std::time::Duration;
 
 mod objects;
 
+pub struct Camera
+{
+    x: f32,
+    y: f32,
+    width: u32,
+    height: u32,
+    scale: f32
+}
+
+impl Camera
+{
+    fn new(x: f32, y: f32, width: u32, height: u32, scale: f32) -> Self
+    {
+        Camera { x, y, width, height, scale }
+    }
+}
+
 fn main() -> Result<(), Error>
 {
+    /* create camera */
+    let camera = Camera::new(0.0, 0.0, 800, 600, 1.0);
+
     /* create sdl context */
     let sdl_context = sdl3::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
     /* create window */
-    let window = video_subsystem.window("Motio", 800, 600)
+    let window = video_subsystem.window("Motio", camera.width, camera.height)
         .position_centered()
         .build()
         .unwrap();
@@ -39,7 +59,7 @@ fn main() -> Result<(), Error>
     let mut objects: Vec<&mut objects::Object> = Vec::new();
     /* create square */
     let mut obj = objects::Object::new(
-        objects::Transform::new(400.0, 300.0, 25.0, 10.0, 1.0),
+        objects::Transform::new(0.0, 0.0, 25.0, 10.0, 1.0),
         objects::Sprite::new(64.0, 64.0, texture),
         objects::ObjectType::Spring(5.0));
     /* push to vector */
@@ -63,7 +83,7 @@ fn main() -> Result<(), Error>
                 _ => {}
             }
         }
-        main_loop(&mut canvas, &mut objects)?;
+        main_loop(&mut canvas, &mut objects, &camera)?;
         /* present canvas */
         canvas.present();
         /* idle */
@@ -74,7 +94,8 @@ fn main() -> Result<(), Error>
 
 /* objects must be mut in order to use iter_mut */
 fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
-    objects: &mut Vec<&mut objects::Object>) -> Result<(), Error>
+    objects: &mut Vec<&mut objects::Object>,
+    camera: &Camera) -> Result<(), Error>
 {
     /* get delta time */
     let delta = 1.0 / 60.0;
@@ -82,17 +103,21 @@ fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     for object in objects.iter_mut()
     {
         objects::update(object, delta);
-        draw(canvas, object)?;
+        draw(canvas, object, camera)?;
     }
     Ok(())
 }
 
 /* render object to screen */
 fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
-    object: &mut objects::Object) -> Result<(), Error>
+    object: &mut objects::Object,
+    camera: &Camera) -> Result<(), Error>
 {
-    let pos_x = object.transform.x - object.sprite.width / 2.0;
-    let pos_y = object.transform.y - object.sprite.height / 2.0;
+    let mut pos_x = object.transform.x - object.sprite.width / 2.0;
+    let mut pos_y = object.transform.y - object.sprite.height / 2.0;
+
+    pos_x = pos_x - camera.x + camera.width as f32 / 2.0;
+    pos_y = pos_y - camera.y + camera.height as f32 / 2.0;
 
     canvas.copy_ex(
         &object.sprite.texture,

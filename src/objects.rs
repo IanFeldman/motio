@@ -36,6 +36,8 @@ impl Transform
     {
         /* apply angular velocity */
         self.theta += self.angular_velocity * delta_time;
+        /* clamp rotation for both positive and negative */
+        self.theta %= 360.0;
     }
 }
 
