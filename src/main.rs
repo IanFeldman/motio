@@ -72,9 +72,6 @@ fn main() -> Result<(), Error>
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop
     {
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
-        canvas.clear();
-
         /* listen for quit event, mouse events */
         for event in event_pump.poll_iter()
         {
@@ -96,7 +93,7 @@ fn main() -> Result<(), Error>
         poll_key(&event_pump, &mut camera, 1.0 / 60.0);
         /* run main loop */
         main_loop(&mut canvas, &mut objects, &camera)?;
-        canvas.present();
+        /* idle */
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
     Ok(())
@@ -125,6 +122,7 @@ fn poll_key(event_pump: &sdl3::EventPump, camera: &mut Camera, delta_time: f32)
     }
 }
 
+/* update camera scale based on mouse scroll wheel input */
 fn handle_mouse_wheel(y: f32, camera:&mut Camera, delta_time: f32)
 {
     if y > 0.0
@@ -136,7 +134,7 @@ fn handle_mouse_wheel(y: f32, camera:&mut Camera, delta_time: f32)
         let scale = camera.scale - camera.zoom_speed * delta_time;
         if scale < 0.0
         {
-            camera.scale = 0.001
+            camera.scale = 0.0;
         }
         else
         {
@@ -151,12 +149,19 @@ fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     objects: &mut Vec<&mut objects::Object>,
     camera: &Camera) -> Result<(), Error>
 {
+    /* clear canvas */
+    canvas.set_draw_color(Color::RGB(0, 0, 0));
+    canvas.clear();
+
     /* iterate over objects */
     for object in objects.iter_mut()
     {
         objects::update(object, 1.0 / 60.0);
         draw(canvas, object, camera)?;
     }
+
+    /* present canvas */
+    canvas.present();
     Ok(())
 }
 
@@ -165,12 +170,15 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     object: &mut objects::Object,
     camera: &Camera) -> Result<(), Error>
 {
+    /* ensure sprite is drawn from center, not corner */
     let mut pos_x = object.transform.x - object.sprite.width / 2.0;
     let mut pos_y = object.transform.y - object.sprite.height / 2.0;
 
+    /* apply camera position and size */
     pos_x = pos_x - camera.x + camera.width as f32 / 2.0;
     pos_y = pos_y - camera.y + camera.height as f32 / 2.0;
 
+    /* draw */
     canvas.copy_ex(
         &object.sprite.texture,
         None,
