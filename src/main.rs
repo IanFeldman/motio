@@ -170,9 +170,13 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     object: &mut objects::Object,
     camera: &Camera) -> Result<(), Error>
 {
+    /* apply scale to sprite dimensions */
+    let sprite_width = object.sprite.width * camera.scale;
+    let sprite_height = object.sprite.width * camera.scale;
+
     /* ensure sprite is drawn from center, not corner */
-    let mut pos_x = object.transform.x - object.sprite.width / 2.0;
-    let mut pos_y = object.transform.y - object.sprite.height / 2.0;
+    let mut pos_x = object.transform.x - sprite_width / 2.0;
+    let mut pos_y = object.transform.y - sprite_height / 2.0;
 
     /* apply camera position and size */
     pos_x = pos_x - camera.x + camera.width as f32 / 2.0;
@@ -183,9 +187,7 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
         &object.sprite.texture,
         None,
         /* TODO: consider saving rect to struct to avoid this overhead */
-        FRect::new(pos_x, pos_y,
-            object.sprite.width * camera.scale,
-            object.sprite.height * camera.scale),
+        FRect::new(pos_x, pos_y, sprite_width, sprite_height),
         object.transform.theta as f64,
         None,
         false,
