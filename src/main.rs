@@ -32,7 +32,7 @@ fn main() -> Result<(), Error>
 
     /* load square texture */
     let texture_creator = canvas.texture_creator();
-    let path = Path::new("assets/square.png");
+    let path = Path::new("assets/gear.png");
     let texture = texture_creator.load_texture(path)?;
 
     /* create vectors of objects */
