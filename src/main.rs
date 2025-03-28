@@ -1,11 +1,11 @@
 extern crate sdl3;
 
 /* sdl3 */
-use sdl3::pixels::Color;
+use sdl3::Error;
 use sdl3::event::Event;
 use sdl3::image::LoadTexture;
 use sdl3::keyboard::{Keycode, Scancode};
-use sdl3::Error;
+use sdl3::pixels::Color;
 use sdl3::render::FRect;
 use std::path::Path;
 use std::time::Duration;
@@ -19,21 +19,23 @@ pub struct Camera
     width: u32,
     height: u32,
     scale: f32,
-    speed: f32
+    move_speed: f32,
+    zoom_speed: f32,
 }
 
 impl Camera
 {
-    fn new(x: f32, y: f32, width: u32, height: u32, scale: f32, speed: f32) -> Self
+    fn new(x: f32, y: f32, width: u32, height: u32, scale: f32,
+        move_speed: f32, zoom_speed: f32) -> Self
     {
-        Camera { x, y, width, height, scale, speed }
+        Camera { x, y, width, height, scale, move_speed, zoom_speed }
     }
 }
 
 fn main() -> Result<(), Error>
 {
     /* create camera */
-    let mut camera = Camera::new(0.0, 0.0, 800, 600, 1.0, 200.0);
+    let mut camera = Camera::new(0.0, 0.0, 800, 600, 1.0, 200.0, 5.0);
 
     /* create sdl context */
     let sdl_context = sdl3::init().unwrap();
@@ -73,7 +75,7 @@ fn main() -> Result<(), Error>
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
 
-        /* listen for quit event */
+        /* listen for quit event, mouse events */
         for event in event_pump.poll_iter()
         {
             match event
@@ -82,6 +84,10 @@ fn main() -> Result<(), Error>
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } =>
                 {
                     break 'running
+                },
+                Event::MouseWheel { y, .. } =>
+                {
+                    handle_mouse_wheel(y, &mut camera, 1.0 / 60.0);
                 },
                 _ => {}
             }
@@ -99,22 +105,43 @@ fn main() -> Result<(), Error>
 /* poll keyboard for camera movement input */
 fn poll_key(event_pump: &sdl3::EventPump, camera: &mut Camera, delta_time: f32)
 {
+    /* cam speed increases as scale increases for better feel */
     let keystates = event_pump.keyboard_state();
     if keystates.is_scancode_pressed(Scancode::W)
     {
-        camera.y -= camera.speed * delta_time;
+        camera.y -= camera.move_speed * camera.scale * delta_time;
     }
     if keystates.is_scancode_pressed(Scancode::A)
     {
-        camera.x -= camera.speed * delta_time;
+        camera.x -= camera.move_speed * camera.scale * delta_time;
     }
     if keystates.is_scancode_pressed(Scancode::S)
     {
-        camera.y += camera.speed * delta_time;
+        camera.y += camera.move_speed * camera.scale * delta_time;
     }
     if keystates.is_scancode_pressed(Scancode::D)
     {
-        camera.x += camera.speed * delta_time;
+        camera.x += camera.move_speed * camera.scale *delta_time;
+    }
+}
+
+fn handle_mouse_wheel(y: f32, camera:&mut Camera, delta_time: f32)
+{
+    if y > 0.0
+    {
+        camera.scale += camera.zoom_speed * delta_time;
+    }
+    else if y < 0.0
+    {
+        let scale = camera.scale - camera.zoom_speed * delta_time;
+        if scale < 0.0
+        {
+            camera.scale = 0.001
+        }
+        else
+        {
+            camera.scale = scale;
+        }
     }
 }
 
@@ -148,7 +175,9 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
         &object.sprite.texture,
         None,
         /* TODO: consider saving rect to struct to avoid this overhead */
-        FRect::new(pos_x, pos_y, object.sprite.width, object.sprite.height),
+        FRect::new(pos_x, pos_y,
+            object.sprite.width * camera.scale,
+            object.sprite.height * camera.scale),
         object.transform.theta as f64,
         None,
         false,
