@@ -39,9 +39,9 @@ fn main() -> Result<(), Error>
     let mut objects: Vec<&mut objects::Object> = Vec::new();
     /* create square */
     let mut obj = objects::Object::new(
-        objects::Transform::new(400.0, 300.0, 10.0, 10.0, 1.0),
+        objects::Transform::new(400.0, 300.0, 25.0, 10.0, 1.0),
         objects::Sprite::new(64.0, 64.0, texture),
-        objects::ObjectType::Normal);
+        objects::ObjectType::Spring(5.0));
     /* push to vector */
     objects.push(&mut obj);
 
@@ -87,6 +87,7 @@ fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     Ok(())
 }
 
+/* render object to screen */
 fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     object: &mut objects::Object) -> Result<(), Error>
 {

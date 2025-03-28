@@ -15,7 +15,7 @@ impl Sprite
     }
 }
 
-/* Position, angle, and physics properties */
+/* position, angle, and physics properties */
 pub struct Transform
 {
     pub x: f32,
@@ -25,7 +25,7 @@ pub struct Transform
     pub mass: f32,
 }
 
-/* Implement constructor and default physics update */
+/* implement constructor and default physics update */
 impl Transform
 {
     pub fn new(x: f32, y: f32, theta: f32, angular_velocity: f32, mass: f32) -> Self
@@ -42,11 +42,11 @@ impl Transform
 pub enum ObjectType
 {
     Normal,
-    Spring,
+    Spring(f32), /* spring constant */
     Static
 }
 
-/* Object types */
+/* object types */
 pub struct Object
 {
     pub transform: Transform,
@@ -63,9 +63,26 @@ impl Object
     }
 }
 
+/* update physics for object based on type */
 pub fn update(object: &mut Object, delta_time: f32)
 {
-    /* check which object type, perform update */
-    object.transform.update(delta_time);
+    match object.object_type
+    {
+        ObjectType::Normal =>
+        {
+            object.transform.update(delta_time);
+        }
+        ObjectType::Spring(k) =>
+        {
+            let torque = -k * object.transform.theta;
+            let force = torque * (object.sprite.width / 2.0);
+            let accel = force / object.transform.mass;
+            object.transform.angular_velocity += accel * delta_time;
+            object.transform.update(delta_time);
+        }
+        ObjectType::Static =>
+        {
+        }
+    }
 }
 
