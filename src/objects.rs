@@ -1,18 +1,3 @@
-pub struct Sprite
-{
-    pub width: f32,
-    pub height: f32,
-    pub texture_idx: u32 /* index of texture in the master list */
-}
-
-impl Sprite
-{
-    pub fn new(width: f32, height: f32, texture_idx: u32) -> Self
-    {
-        Sprite { width, height, texture_idx }
-    }
-}
-
 /* position, angle, and physics properties */
 pub struct Transform
 {
@@ -39,6 +24,24 @@ impl Transform
     }
 }
 
+/* texture information */
+pub struct Sprite
+{
+    pub width: f32,
+    pub height: f32,
+    pub texture_idx: u32 /* index of texture in the master list */
+}
+
+/* implement sprite constructor */
+impl Sprite
+{
+    pub fn new(width: f32, height: f32, texture_idx: u32) -> Self
+    {
+        Sprite { width, height, texture_idx }
+    }
+}
+
+/* object type indicating how object is affected by physics */
 pub enum ObjectType
 {
     Normal,

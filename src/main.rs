@@ -35,7 +35,7 @@ impl Camera
 fn main() -> Result<(), Error>
 {
     /* create camera */
-    let mut camera = Camera::new(0.0, 0.0, 800, 600, 1.0, 200.0, 5.0);
+    let mut camera = Camera::new(0.0, 0.0, 800, 600, 1.0, 400.0, 5.0);
 
     /* create sdl context */
     let sdl_context = sdl3::init().unwrap();
@@ -53,17 +53,17 @@ fn main() -> Result<(), Error>
     canvas.clear();
     canvas.present();
 
-    /* load square texture */
+    /* load texture */
     let texture_creator = canvas.texture_creator();
-    let path = Path::new("assets/gear.png");
     let mut textures: Vec<Texture> = Vec::new();
+    let path = Path::new("assets/gear.png");
     let mut texture = texture_creator.load_texture(path)?;
     texture.set_scale_mode(ScaleMode::Nearest);
     textures.push(texture);
 
-    /* create vectors of objects */
+    /* create vector of objects */
     let mut objects: Vec<&mut objects::Object> = Vec::new();
-    /* create square */
+    /* create gear */
     let mut obj = objects::Object::new(
         objects::Transform::new(0.0, 0.0, 25.0, 10.0, 1.0),
         objects::Sprite::new(64.0, 64.0, 0),
@@ -75,6 +75,7 @@ fn main() -> Result<(), Error>
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop
     {
+        let delta_time = 1.0 / 60.0;
         /* listen for quit event, mouse events */
         for event in event_pump.poll_iter()
         {
@@ -87,15 +88,15 @@ fn main() -> Result<(), Error>
                 },
                 Event::MouseWheel { y, .. } =>
                 {
-                    handle_mouse_wheel(y, &mut camera, 1.0 / 60.0);
+                    handle_mouse_wheel(y, &mut camera, delta_time);
                 },
                 _ => {}
             }
         }
         /* listen for keyboard presses */
-        poll_key(&event_pump, &mut camera, 1.0 / 60.0);
+        poll_key(&event_pump, &mut camera, delta_time);
         /* run main loop */
-        main_loop(&mut canvas, &textures, &mut objects, &camera)?;
+        main_loop(&mut canvas, &textures, &mut objects, &camera, delta_time)?;
         /* idle */
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
@@ -151,7 +152,8 @@ fn handle_mouse_wheel(y: f32, camera:&mut Camera, delta_time: f32)
 fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     textures: &Vec<Texture>,
     objects: &mut Vec<&mut objects::Object>,
-    camera: &Camera) -> Result<(), Error>
+    camera: &Camera,
+    delta_time: f32) -> Result<(), Error>
 {
     /* clear canvas */
     canvas.set_draw_color(Color::RGB(0, 0, 0));
@@ -160,7 +162,7 @@ fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     /* iterate over objects */
     for object in objects.iter_mut()
     {
-        objects::update(object, 1.0 / 60.0);
+        objects::update(object, delta_time);
         draw(canvas, textures, object, camera)?;
     }
 
