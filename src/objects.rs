@@ -1,17 +1,15 @@
-use sdl3::render::Texture;
-
 pub struct Sprite
 {
     pub width: f32,
     pub height: f32,
-    pub texture: Texture
+    pub texture_idx: u32 /* index of texture in the master list */
 }
 
 impl Sprite
 {
-    pub fn new(width: f32, height: f32, texture: Texture) -> Self
+    pub fn new(width: f32, height: f32, texture_idx: u32) -> Self
     {
-        Sprite { width, height, texture }
+        Sprite { width, height, texture_idx }
     }
 }
 

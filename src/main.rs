@@ -6,7 +6,7 @@ use sdl3::event::Event;
 use sdl3::image::LoadTexture;
 use sdl3::keyboard::{Keycode, Scancode};
 use sdl3::pixels::Color;
-use sdl3::render::FRect;
+use sdl3::render::{FRect, Texture, ScaleMode};
 use std::path::Path;
 use std::time::Duration;
 
@@ -56,14 +56,17 @@ fn main() -> Result<(), Error>
     /* load square texture */
     let texture_creator = canvas.texture_creator();
     let path = Path::new("assets/gear.png");
-    let texture = texture_creator.load_texture(path)?;
+    let mut textures: Vec<Texture> = Vec::new();
+    let mut texture = texture_creator.load_texture(path)?;
+    texture.set_scale_mode(ScaleMode::Nearest);
+    textures.push(texture);
 
     /* create vectors of objects */
     let mut objects: Vec<&mut objects::Object> = Vec::new();
     /* create square */
     let mut obj = objects::Object::new(
         objects::Transform::new(0.0, 0.0, 25.0, 10.0, 1.0),
-        objects::Sprite::new(64.0, 64.0, texture),
+        objects::Sprite::new(64.0, 64.0, 0),
         objects::ObjectType::Spring(5.0));
     /* push to vector */
     objects.push(&mut obj);
@@ -92,7 +95,7 @@ fn main() -> Result<(), Error>
         /* listen for keyboard presses */
         poll_key(&event_pump, &mut camera, 1.0 / 60.0);
         /* run main loop */
-        main_loop(&mut canvas, &mut objects, &camera)?;
+        main_loop(&mut canvas, &textures, &mut objects, &camera)?;
         /* idle */
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
@@ -146,6 +149,7 @@ fn handle_mouse_wheel(y: f32, camera:&mut Camera, delta_time: f32)
 /* update and draw all objects */
 /* objects must be mut in order to use iter_mut */
 fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
+    textures: &Vec<Texture>,
     objects: &mut Vec<&mut objects::Object>,
     camera: &Camera) -> Result<(), Error>
 {
@@ -157,7 +161,7 @@ fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     for object in objects.iter_mut()
     {
         objects::update(object, 1.0 / 60.0);
-        draw(canvas, object, camera)?;
+        draw(canvas, textures, object, camera)?;
     }
 
     /* present canvas */
@@ -167,6 +171,7 @@ fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
 
 /* render object to screen */
 fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
+    textures: &Vec<Texture>,
     object: &mut objects::Object,
     camera: &Camera) -> Result<(), Error>
 {
@@ -184,7 +189,7 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
 
     /* draw */
     canvas.copy_ex(
-        &object.sprite.texture,
+        &textures[object.sprite.texture_idx as usize],
         None,
         /* TODO: consider saving rect to struct to avoid this overhead */
         FRect::new(pos_x, pos_y, sprite_width, sprite_height),
