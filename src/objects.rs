@@ -41,6 +41,22 @@ impl Sprite
     }
 }
 
+pub struct SphereCollider
+{
+    /* position relative to owner, and radius */
+    pub x: f32,
+    pub y: f32,
+    pub r: f32
+}
+
+impl SphereCollider
+{
+    pub fn new(x: f32, y: f32, r: f32) -> Self
+    {
+        SphereCollider { x, y, r }
+    }
+}
+
 /* object type indicating how object is affected by physics */
 pub enum ObjectType
 {
@@ -54,15 +70,16 @@ pub struct Object
 {
     pub transform: Transform,
     pub sprite: Sprite,
+    pub collider: Vec<SphereCollider>,
     pub object_type: ObjectType
-    /* collider */
 }
 
 impl Object
 {
-    pub fn new(transform: Transform, sprite: Sprite, object_type: ObjectType) -> Self
+    pub fn new(transform: Transform, sprite: Sprite,
+        collider: Vec<SphereCollider>, object_type: ObjectType) -> Self
     {
-        Object { transform, sprite, object_type }
+        Object { transform, sprite, collider, object_type }
     }
 }
 
