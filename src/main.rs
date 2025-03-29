@@ -249,8 +249,8 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
 fn rotate_point(x: f32, y: f32, theta: f32) -> (f32, f32)
 {
     let theta_rad = theta * std::f32::consts::PI / 180.0;
-    let mut x2 = x * theta_rad.cos() - y * theta_rad.sin();
-    let mut y2 = x * theta_rad.sin() + y * theta_rad.cos();
+    let x2 = x * theta_rad.cos() - y * theta_rad.sin();
+    let y2 = x * theta_rad.sin() + y * theta_rad.cos();
     (x2, y2)
 }
 
