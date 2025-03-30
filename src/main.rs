@@ -62,7 +62,7 @@ fn main() -> Result<(), Error>
     textures.push(texture);
 
     /* create vector of objects */
-    let mut objects: Vec<&mut objects::Object> = Vec::new();
+    let mut objects: Vec<objects::Object> = Vec::new();
     let mut collider: Vec<objects::SphereCollider> = Vec::new();
     collider.push(objects::SphereCollider::new(0.0, 27.0, 5.0));
     collider.push(objects::SphereCollider::new(19.0, 19.0, 5.0));
@@ -73,13 +73,13 @@ fn main() -> Result<(), Error>
     collider.push(objects::SphereCollider::new(-27.0, 0.0, 5.0));
     collider.push(objects::SphereCollider::new(-19.0, 19.0, 5.0));
     /* create gear */
-    let mut obj = objects::Object::new(
+    let obj = objects::Object::new(
         objects::Transform::new(0.0, 0.0, 25.0, 10.0, 1.0),
         objects::Sprite::new(64.0, 64.0, 0),
         collider,
         objects::ObjectType::Spring(5.0));
     /* push to vector */
-    objects.push(&mut obj);
+    objects.push(obj);
 
     /* run loop, check events */
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -158,10 +158,9 @@ fn handle_mouse_wheel(y: f32, camera:&mut Camera, delta_time: f32)
 }
 
 /* update and draw all objects */
-/* objects must be mut in order to use iter_mut */
 fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     textures: &Vec<Texture>,
-    objects: &mut Vec<&mut objects::Object>,
+    objects: &mut Vec<objects::Object>,
     camera: &Camera,
     delta_time: f32) -> Result<(), Error>
 {
@@ -169,10 +168,9 @@ fn main_loop(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
 
-    /* iterate over objects */
+    objects::update_all(objects, delta_time);
     for object in objects.iter_mut()
     {
-        objects::update(object, delta_time);
         draw(canvas, textures, object, camera, true)?;
     }
 
@@ -229,7 +227,7 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
             let radius = sphere.r * camera.scale;
 
             /* rotate point */
-            let (collider_x, collider_y) = rotate_point(sphere.x, sphere.y,
+            let (collider_x, collider_y) = objects::rotate_point(sphere.x, sphere.y,
                 object.transform.theta);
 
             /* draw rectangle */
@@ -244,13 +242,5 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     }
 
     Ok(())
-}
-
-fn rotate_point(x: f32, y: f32, theta: f32) -> (f32, f32)
-{
-    let theta_rad = theta * std::f32::consts::PI / 180.0;
-    let x2 = x * theta_rad.cos() - y * theta_rad.sin();
-    let y2 = x * theta_rad.sin() + y * theta_rad.cos();
-    (x2, y2)
 }
 

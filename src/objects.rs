@@ -84,25 +84,92 @@ impl Object
 }
 
 /* update physics for object based on type */
-pub fn update(object: &mut Object, delta_time: f32)
+pub fn update_all(objects: &mut Vec<Object>, delta_time: f32)
 {
-    match object.object_type
+    /* compute collisions */
+    let len = objects.len();
+    for i in 0..len
     {
-        ObjectType::Normal =>
+        /* split objects */
+        let (left, right) = objects.split_at_mut(i);
+        /* edge case */
+        if i == len - 1
         {
-            object.transform.update(delta_time);
+            for other in left.iter_mut()
+            {
+                detect_collision(&mut right[0], other);
+            }
+            break;
         }
-        ObjectType::Spring(k) =>
+        /* normal case */
+        let (current, rest) = right.split_at_mut(1);
+        for other in rest.iter_mut()
         {
-            let torque = -k * object.transform.theta;
-            let force = torque * (object.sprite.width / 2.0);
-            let accel = force / object.transform.mass;
-            object.transform.angular_velocity += accel * delta_time;
-            object.transform.update(delta_time);
+            detect_collision(&mut current[0], other);
         }
-        ObjectType::Static =>
+        for other in left.iter_mut()
         {
+            detect_collision(&mut current[0], other);
         }
     }
+
+    for object in objects.iter_mut()
+    {
+        /* apply physics */
+        match object.object_type
+        {
+            ObjectType::Normal =>
+            {
+                object.transform.update(delta_time);
+            }
+            ObjectType::Spring(k) =>
+            {
+                let torque = -k * object.transform.theta;
+                let force = torque * (object.sprite.width / 2.0);
+                let accel = force / object.transform.mass;
+                object.transform.angular_velocity += accel * delta_time;
+                object.transform.update(delta_time);
+            }
+            ObjectType::Static =>
+            {
+            }
+        }
+    }
+}
+
+fn detect_collision(object1: &Object, object2: &Object) -> bool
+{
+    for collider1 in object1.collider.iter()
+    {
+        /* get absolute position of collider1 */
+        let (mut x1, mut y1) = rotate_point(collider1.x, collider1.y,
+            object1.transform.theta);
+        x1 += object1.transform.x;
+        y1 += object1.transform.y;
+
+        for collider2 in object2.collider.iter()
+        {
+            /* get absolute position of collider2 */
+            let (mut x2, mut y2) = rotate_point(collider2.x, collider2.y,
+                object2.transform.theta);
+            x2 += object2.transform.x;
+            y2 += object2.transform.y;
+
+            /* check collision */
+            let dx = x2 - x1;
+            let dy = y2 - y1;
+            let distance = (dx * dx - dy * dy).sqrt();
+            return distance < collider1.r + collider2.r
+        }
+    }
+    false
+}
+
+pub fn rotate_point(x: f32, y: f32, theta: f32) -> (f32, f32)
+{
+    let theta_rad = theta * std::f32::consts::PI / 180.0;
+    let x2 = x * theta_rad.cos() - y * theta_rad.sin();
+    let y2 = x * theta_rad.sin() + y * theta_rad.cos();
+    (x2, y2)
 }
 
