@@ -76,7 +76,7 @@ fn main() -> Result<(), Error>
     let mut collider: Vec<objects::SphereCollider> = Vec::new();
     collider.push(objects::SphereCollider::new(0.0, 27.0, 5.0));
     let obj2 = objects::Object::new(
-        objects::Transform::new(0.0, 64.0, 25.0, 10.0, 1.0),
+        objects::Transform::new(0.0, 60.0, 25.0, 10.0, 1.0),
         objects::Sprite::new(64.0, 64.0, 0),
         collider,
         objects::ObjectType::Normal);

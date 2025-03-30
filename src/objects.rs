@@ -158,13 +158,12 @@ fn detect_collision(object1: &Object, object2: &Object) -> bool
             /* check collision */
             let dx = x2 - x1;
             let dy = y2 - y1;
-            let distance = (dx * dx - dy * dy).sqrt();
+            let distance = (dx * dx + dy * dy).sqrt();
             let collide = distance < collider1.r + collider2.r;
             if collide
             {
-                println!("Collision!");
+                return true
             }
-            return collide
         }
     }
     false
