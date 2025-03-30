@@ -65,21 +65,24 @@ fn main() -> Result<(), Error>
     let mut objects: Vec<objects::Object> = Vec::new();
     let mut collider: Vec<objects::SphereCollider> = Vec::new();
     collider.push(objects::SphereCollider::new(0.0, 27.0, 5.0));
-    collider.push(objects::SphereCollider::new(19.0, 19.0, 5.0));
-    collider.push(objects::SphereCollider::new(27.0, 0.0, 5.0));
-    collider.push(objects::SphereCollider::new(19.0, -19.0, 5.0));
-    collider.push(objects::SphereCollider::new(0.0, -27.0, 5.0));
-    collider.push(objects::SphereCollider::new(-19.0, -19.0, 5.0));
-    collider.push(objects::SphereCollider::new(-27.0, 0.0, 5.0));
-    collider.push(objects::SphereCollider::new(-19.0, 19.0, 5.0));
     /* create gear */
-    let obj = objects::Object::new(
+    let obj1 = objects::Object::new(
         objects::Transform::new(0.0, 0.0, 25.0, 10.0, 1.0),
         objects::Sprite::new(64.0, 64.0, 0),
         collider,
         objects::ObjectType::Spring(5.0));
+    /* create gear */
+    /* consider how to reuse collider */
+    let mut collider: Vec<objects::SphereCollider> = Vec::new();
+    collider.push(objects::SphereCollider::new(0.0, 27.0, 5.0));
+    let obj2 = objects::Object::new(
+        objects::Transform::new(0.0, 64.0, 25.0, 10.0, 1.0),
+        objects::Sprite::new(64.0, 64.0, 0),
+        collider,
+        objects::ObjectType::Normal);
     /* push to vector */
-    objects.push(obj);
+    objects.push(obj1);
+    objects.push(obj2);
 
     /* run loop, check events */
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -120,19 +123,19 @@ fn poll_key(event_pump: &sdl3::EventPump, camera: &mut Camera, delta_time: f32)
     let keystates = event_pump.keyboard_state();
     if keystates.is_scancode_pressed(Scancode::W)
     {
-        camera.y -= camera.move_speed * camera.scale * delta_time;
+        camera.y -= camera.move_speed * delta_time;
     }
     if keystates.is_scancode_pressed(Scancode::A)
     {
-        camera.x -= camera.move_speed * camera.scale * delta_time;
+        camera.x -= camera.move_speed * delta_time;
     }
     if keystates.is_scancode_pressed(Scancode::S)
     {
-        camera.y += camera.move_speed * camera.scale * delta_time;
+        camera.y += camera.move_speed * delta_time;
     }
     if keystates.is_scancode_pressed(Scancode::D)
     {
-        camera.x += camera.move_speed * camera.scale *delta_time;
+        camera.x += camera.move_speed * delta_time;
     }
 }
 
@@ -190,13 +193,21 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     let sprite_width = object.sprite.width * camera.scale;
     let sprite_height = object.sprite.height * camera.scale;
 
+    /* apply scale to camera position */
+    let cam_x = camera.x * camera.scale;
+    let cam_y = camera.y * camera.scale;
+
+    /* apply scale to object position */
+    let obj_x = object.transform.x * camera.scale;
+    let obj_y = object.transform.y * camera.scale;
+
     /* ensure sprite is drawn from center, not corner */
-    let mut pos_x = object.transform.x - sprite_width / 2.0;
-    let mut pos_y = object.transform.y - sprite_height / 2.0;
+    let mut pos_x = obj_x - sprite_width / 2.0;
+    let mut pos_y = obj_y - sprite_height / 2.0;
 
     /* apply camera position and size */
-    pos_x = pos_x - camera.x + camera.width as f32 / 2.0;
-    pos_y = pos_y - camera.y + camera.height as f32 / 2.0;
+    pos_x = pos_x - cam_x + camera.width as f32 / 2.0;
+    pos_y = pos_y - cam_y + camera.height as f32 / 2.0;
 
     /* draw */
     canvas.copy_ex(
@@ -217,8 +228,8 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
         canvas.set_draw_color(Color::RGB(0, 255, 0));
 
         /* get position of object center */
-        pos_x = object.transform.x - camera.x + camera.width as f32 / 2.0;
-        pos_y = object.transform.y - camera.y + camera.height as f32 / 2.0;
+        pos_x = obj_x - cam_x + camera.width as f32 / 2.0;
+        pos_y = obj_y - cam_y + camera.height as f32 / 2.0;
 
         /* iterate over sphere colliders */
         for sphere in object.collider.iter()
