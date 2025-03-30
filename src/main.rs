@@ -64,25 +64,34 @@ fn main() -> Result<(), Error>
     /* create vector of objects */
     let mut objects: Vec<objects::Object> = Vec::new();
     let mut collider: Vec<objects::SphereCollider> = Vec::new();
-    collider.push(objects::SphereCollider::new(0.0, 27.0, 5.0));
+    collider.push(objects::SphereCollider::new(0.0, 0.0, 32.0));
     /* create gear */
     let obj1 = objects::Object::new(
-        objects::Transform::new(0.0, 0.0, 25.0, 10.0, 1.0),
+        objects::Transform::new(0.0, 0.0, 32.0, 0.0, 1.0),
         objects::Sprite::new(64.0, 64.0, 0),
         collider,
         objects::ObjectType::Spring(5.0));
     /* create gear */
     /* consider how to reuse collider */
     let mut collider: Vec<objects::SphereCollider> = Vec::new();
-    collider.push(objects::SphereCollider::new(0.0, 27.0, 5.0));
+    collider.push(objects::SphereCollider::new(0.0, 0.0, 32.0));
     let obj2 = objects::Object::new(
-        objects::Transform::new(0.0, 60.0, 25.0, 10.0, 1.0),
+        objects::Transform::new(0.0, 60.0, 180.0, 0.0, 1.0),
+        objects::Sprite::new(64.0, 64.0, 0),
+        collider,
+        objects::ObjectType::Normal);
+    /* create gear */
+    let mut collider: Vec<objects::SphereCollider> = Vec::new();
+    collider.push(objects::SphereCollider::new(0.0, 0.0, 32.0));
+    let obj3 = objects::Object::new(
+        objects::Transform::new(10.0, 120.0, 0.0, 0.0, 1.0),
         objects::Sprite::new(64.0, 64.0, 0),
         collider,
         objects::ObjectType::Normal);
     /* push to vector */
     objects.push(obj1);
     objects.push(obj2);
+    objects.push(obj3);
 
     /* run loop, check events */
     let mut event_pump = sdl_context.event_pump().unwrap();

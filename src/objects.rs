@@ -113,6 +113,7 @@ pub fn update_all(objects: &mut Vec<Object>, delta_time: f32)
         }
     }
 
+    /* apply forces and accelerations */
     for object in objects.iter_mut()
     {
         /* apply physics */
@@ -137,7 +138,8 @@ pub fn update_all(objects: &mut Vec<Object>, delta_time: f32)
     }
 }
 
-fn detect_collision(object1: &Object, object2: &Object) -> bool
+/* detect object collision and call handler function */
+fn detect_collision(object1: &mut Object, object2: &mut Object) -> bool
 {
     for collider1 in object1.collider.iter()
     {
@@ -162,11 +164,34 @@ fn detect_collision(object1: &Object, object2: &Object) -> bool
             let collide = distance < collider1.r + collider2.r;
             if collide
             {
+                handle_collision(object1, object2);
                 return true
             }
         }
     }
     false
+}
+
+/* perform elastic collision calculation */
+fn handle_collision(object1: &mut Object, object2: &Object)
+{
+    /* TODO: Add slight force when gear teeth are overlapping */
+    /* maybe add small delay... */
+
+    /* only update object 1 to avoid duplicate collision handling */
+    match object1.object_type
+    {
+        ObjectType::Normal =>
+        {
+            object1.transform.angular_velocity = -object2.transform.angular_velocity;
+        }
+        ObjectType::Spring(_k) =>
+        {
+        }
+        ObjectType::Static =>
+        {
+        }
+    }
 }
 
 pub fn rotate_point(x: f32, y: f32, theta: f32) -> (f32, f32)
