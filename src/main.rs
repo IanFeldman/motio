@@ -5,6 +5,7 @@ use sdl3::Error;
 use sdl3::event::Event;
 use sdl3::image::LoadTexture;
 use sdl3::keyboard::{Keycode, Scancode};
+use sdl3::mouse::MouseButton;
 use sdl3::pixels::Color;
 use sdl3::render::{FRect, Texture, ScaleMode};
 use std::path::Path;
@@ -76,14 +77,34 @@ fn main() -> Result<(), Error>
         {
             match event
             {
+                /* quit actions */
                 Event::Quit {..} |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } =>
                 {
                     break 'running
                 },
+                /* scrolling */
                 Event::MouseWheel { y, .. } =>
                 {
                     handle_mouse_wheel(y, &mut camera, delta_time);
+                },
+                /* clicking */
+                Event::MouseButtonDown { mouse_btn, x, y, .. } =>
+                {
+                    match mouse_btn
+                    {
+                        MouseButton::Left =>
+                        {
+                            let (x_world, y_world) = screen_to_world(x, y, &camera);
+                            create_gear(x_world, y_world, 22.5, 100.0, objects::ObjectType::Normal, &mut objects);
+                        },
+                        MouseButton::Right =>
+                        {
+                            let (x_world, y_world) = screen_to_world(x, y, &camera);
+                            create_gear(x_world, y_world, 22.5, 100.0, objects::ObjectType::Spring(50.0), &mut objects);
+                        },
+                        _ => (),
+                    }
                 },
                 _ => {}
             }
@@ -171,25 +192,14 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
     camera: &Camera,
     debug: bool) -> Result<(), Error>
 {
-    /* apply scale to sprite dimensions */
+    let (pos_x, pos_y) = world_to_screen(
+        object.transform.x - object.sprite.width / 2.0,
+        object.transform.y - object.sprite.height / 2.0,
+        camera
+    );
+
     let sprite_width = object.sprite.width * camera.scale;
     let sprite_height = object.sprite.height * camera.scale;
-
-    /* apply scale to camera position */
-    let cam_x = camera.x * camera.scale;
-    let cam_y = camera.y * camera.scale;
-
-    /* apply scale to object position */
-    let obj_x = object.transform.x * camera.scale;
-    let obj_y = object.transform.y * camera.scale;
-
-    /* ensure sprite is drawn from center, not corner */
-    let mut pos_x = obj_x - sprite_width / 2.0;
-    let mut pos_y = obj_y - sprite_height / 2.0;
-
-    /* apply camera position and size */
-    pos_x = pos_x - cam_x + camera.width as f32 / 2.0;
-    pos_y = pos_y - cam_y + camera.height as f32 / 2.0;
 
     /* draw */
     canvas.copy_ex(
@@ -210,8 +220,11 @@ fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
         canvas.set_draw_color(Color::RGB(0, 255, 0));
 
         /* get position of object center */
-        pos_x = obj_x - cam_x + camera.width as f32 / 2.0;
-        pos_y = obj_y - cam_y + camera.height as f32 / 2.0;
+        let (pos_x, pos_y) = world_to_screen(
+            object.transform.x,
+            object.transform.y,
+            camera
+        );
 
         /* iterate over sphere colliders */
         for sphere in object.collider.iter()
@@ -249,5 +262,19 @@ fn create_gear(x: f32, y: f32, theta: f32, mass: f32, object_type: objects::Obje
         collider,
         object_type);
     objects.push(gear);
+}
+
+fn screen_to_world(x: f32, y: f32, camera: &Camera) -> (f32, f32)
+{
+    let x_world = camera.x + (x - camera.width as f32 / 2.0) / camera.scale;
+    let y_world = camera.y + (y - camera.height as f32 / 2.0) / camera.scale;
+    (x_world, y_world)
+}
+
+fn world_to_screen(x: f32, y: f32, camera: &Camera) -> (f32, f32)
+{
+    let x_screen = (x - camera.x) * camera.scale + camera.width as f32 / 2.0;
+    let y_screen = (y - camera.y) * camera.scale + camera.height as f32 / 2.0;
+    (x_screen, y_screen)
 }
 
