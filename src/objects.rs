@@ -16,7 +16,7 @@ impl Transform
 {
     pub fn new(x: f32, y: f32, theta: f32, angular_velocity: f32, mass: f32) -> Self
     {
-        let num_collisions = 1;
+        let num_collisions = 0;
         Transform { x, y, theta, angular_velocity, mass, num_collisions }
     }
     pub fn update(&mut self, delta_time: f32)
@@ -62,6 +62,7 @@ impl SphereCollider
 }
 
 /* object type indicating how object is affected by physics */
+#[derive(PartialEq)]
 pub enum ObjectType
 {
     Normal,
@@ -181,7 +182,14 @@ fn detect_collision(object1: &mut Object, object2: &mut Object) -> bool
 fn handle_collision(object1: &mut Object, object2: &Object)
 {
     /* TODO: Add slight force when gear teeth are overlapping */
-    /* maybe add small delay... */
+    /* consider performing weighted average using object masses */
+
+    if object2.object_type == ObjectType::Static
+    {
+        object1.transform.angular_velocity = 0.0;
+        object1.transform.num_collisions = 100; /* arbitrary large num */
+        return
+    }
 
     /* only update object 1 to avoid duplicate collision handling */
     match object1.object_type

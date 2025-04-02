@@ -45,8 +45,6 @@ fn main() -> Result<(), Error>
 
     /* create vector of objects */
     let mut objects: Vec<objects::Object> = Vec::new();
-    create_gear(0.0, 0.0, 22.5, 100.0, objects::ObjectType::Spring(50.0), &mut objects);
-    create_gear(60.0, 0.0, 0.0, 100.0, objects::ObjectType::Normal, &mut objects);
 
     /* run loop, check events */
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -73,22 +71,19 @@ fn main() -> Result<(), Error>
                 /* TODO: create mouse handler function */
                 Event::MouseButtonDown { mouse_btn, x, y, .. } =>
                 {
+                    let (x_world, y_world) =
+                        render::screen_to_world(x, y, &camera);
                     match mouse_btn
                     {
                         MouseButton::Left =>
-                        {
-                            let (x_world, y_world) =
-                                render::screen_to_world(x, y, &camera);
                             create_gear(x_world, y_world, 22.5, 100.0,
-                                objects::ObjectType::Normal, &mut objects);
-                        },
+                                objects::ObjectType::Normal, &mut objects),
                         MouseButton::Right =>
-                        {
-                            let (x_world, y_world) =
-                                render::screen_to_world(x, y, &camera);
                             create_gear(x_world, y_world, 22.5, 100.0,
-                                objects::ObjectType::Spring(50.0), &mut objects);
-                        },
+                                objects::ObjectType::Spring(50.0), &mut objects),
+                        MouseButton::Middle =>
+                            create_gear(x_world, y_world, 22.5, 100.0,
+                                objects::ObjectType::Static, &mut objects),
                         _ => (),
                     }
                 },
