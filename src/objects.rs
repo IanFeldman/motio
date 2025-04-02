@@ -6,6 +6,7 @@ pub struct Transform
     pub theta: f32,
     pub angular_velocity: f32,
     pub mass: f32,
+    pub num_collisions: u32, /* used for velocity avg calc */
 }
 
 /* implement constructor and default physics update */
@@ -13,7 +14,8 @@ impl Transform
 {
     pub fn new(x: f32, y: f32, theta: f32, angular_velocity: f32, mass: f32) -> Self
     {
-        Transform { x, y, theta, angular_velocity, mass }
+        let num_collisions = 1;
+        Transform { x, y, theta, angular_velocity, mass, num_collisions }
     }
     pub fn update(&mut self, delta_time: f32)
     {
@@ -86,12 +88,13 @@ impl Object
 /* update physics for object based on type */
 pub fn update_all(objects: &mut Vec<Object>, delta_time: f32)
 {
-    /* compute collisions */
+    /* compute collisions, ensure reset number of collisions first */
     let len = objects.len();
     for i in 0..len
     {
         /* split objects */
         let (left, right) = objects.split_at_mut(i);
+        right[0].transform.num_collisions = 0;
         /* edge case */
         if i == len - 1
         {
@@ -103,6 +106,7 @@ pub fn update_all(objects: &mut Vec<Object>, delta_time: f32)
         }
         /* normal case */
         let (current, rest) = right.split_at_mut(1);
+        current[0].transform.num_collisions = 0;
         for other in rest.iter_mut()
         {
             detect_collision(&mut current[0], other);
@@ -172,7 +176,6 @@ fn detect_collision(object1: &mut Object, object2: &mut Object) -> bool
     false
 }
 
-/* perform elastic collision calculation */
 fn handle_collision(object1: &mut Object, object2: &Object)
 {
     /* TODO: Add slight force when gear teeth are overlapping */
@@ -183,7 +186,14 @@ fn handle_collision(object1: &mut Object, object2: &Object)
     {
         ObjectType::Normal =>
         {
-            object1.transform.angular_velocity = -object2.transform.angular_velocity;
+            /* compute average of all neighbors velocities */
+            let num_collisions = object1.transform.num_collisions;
+            let obj1_v = object1.transform.angular_velocity;
+            let obj2_v = object2.transform.angular_velocity;
+            let obj1_v_new = (obj1_v * num_collisions as f32 - obj2_v)
+                / (num_collisions as f32 + 1.0);
+            object1.transform.angular_velocity = obj1_v_new;
+            object1.transform.num_collisions += 1;
         }
         ObjectType::Spring(_k) =>
         {
