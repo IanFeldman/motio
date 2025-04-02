@@ -1,6 +1,6 @@
 use sdl3::Error;
 use sdl3::pixels::Color;
-use sdl3::render::{FRect, Texture};
+use sdl3::render::{FRect, Texture, Canvas, FPoint};
 
 use crate::objects;
 
@@ -49,8 +49,22 @@ pub fn world_to_screen(x: f32, y: f32, camera: &Camera) -> (f32, f32)
     (x_screen, y_screen)
 }
 
+/* draw a circle with num_points and (x, y) in screen space */
+fn draw_circle(canvas: &mut Canvas<sdl3::video::Window>,
+    x: f32, y: f32, r: f32, num_points: u32)
+{
+    let theta_increment = 360.0 / num_points as f32;
+    let mut x_rot = r;
+    let mut y_rot = 0.0;
+    for _ in 0..num_points
+    {
+        (x_rot, y_rot) = rotate_point(x_rot, y_rot, theta_increment);
+        let _ = canvas.draw_point(FPoint::new(x + x_rot, y + y_rot));
+    }
+}
+
 /* render object to screen */
-pub fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
+pub fn draw(canvas: &mut Canvas<sdl3::video::Window>,
     textures: &Vec<Texture>,
     object: &mut objects::Object,
     camera: &Camera,
@@ -84,7 +98,7 @@ pub fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
         canvas.set_draw_color(Color::RGB(0, 255, 0));
 
         /* get position of object center */
-        let (pos_x, pos_y) = world_to_screen(
+        let (mut pos_x, mut pos_y) = world_to_screen(
             object.transform.x,
             object.transform.y,
             camera
@@ -96,16 +110,15 @@ pub fn draw(canvas: &mut sdl3::render::Canvas<sdl3::video::Window>,
             /* update radius with scale */
             let radius = sphere.r * camera.scale;
 
-            /* rotate point */
+            /* rotate point with object rotation */
             let (collider_x, collider_y) = rotate_point(
                 sphere.x, sphere.y, object.transform.theta);
 
-            /* draw rectangle */
-            canvas.draw_rect(
-                FRect::new(pos_x + collider_x * camera.scale - radius,
-                    pos_y + collider_y * camera.scale - radius,
-                    radius * 2.0, radius * 2.0)
-            )?;
+            /* add to position */
+            pos_x += collider_x * camera.scale;
+            pos_y += collider_y * camera.scale;
+
+            draw_circle(canvas, pos_x, pos_y, radius, 360);
         }
         /* reset draw color */
         canvas.set_draw_color(Color::RGB(0, 0, 0));
