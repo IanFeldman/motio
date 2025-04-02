@@ -1,4 +1,5 @@
 /target
 /aseprite
 .DS_Store
+*.swp
 

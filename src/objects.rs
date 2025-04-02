@@ -1,3 +1,5 @@
+use crate::render;
+
 /* position, angle, and physics properties */
 pub struct Transform
 {
@@ -148,7 +150,7 @@ fn detect_collision(object1: &mut Object, object2: &mut Object) -> bool
     for collider1 in object1.collider.iter()
     {
         /* get absolute position of collider1 */
-        let (mut x1, mut y1) = rotate_point(collider1.x, collider1.y,
+        let (mut x1, mut y1) = render::rotate_point(collider1.x, collider1.y,
             object1.transform.theta);
         x1 += object1.transform.x;
         y1 += object1.transform.y;
@@ -156,7 +158,7 @@ fn detect_collision(object1: &mut Object, object2: &mut Object) -> bool
         for collider2 in object2.collider.iter()
         {
             /* get absolute position of collider2 */
-            let (mut x2, mut y2) = rotate_point(collider2.x, collider2.y,
+            let (mut x2, mut y2) = render::rotate_point(collider2.x, collider2.y,
                 object2.transform.theta);
             x2 += object2.transform.x;
             y2 += object2.transform.y;
@@ -202,13 +204,5 @@ fn handle_collision(object1: &mut Object, object2: &Object)
         {
         }
     }
-}
-
-pub fn rotate_point(x: f32, y: f32, theta: f32) -> (f32, f32)
-{
-    let theta_rad = theta * std::f32::consts::PI / 180.0;
-    let x2 = x * theta_rad.cos() - y * theta_rad.sin();
-    let y2 = x * theta_rad.sin() + y * theta_rad.cos();
-    (x2, y2)
 }
 
